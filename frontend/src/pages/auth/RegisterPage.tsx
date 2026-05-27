@@ -80,9 +80,6 @@ export function RegisterPage() {
               </option>
             ))}
           </select>
-          <p className="text-xs text-gray-500">
-            For production, restrict role assignment to admins only.
-          </p>
         </div>
         {error && <p className="text-sm text-red-600">{error}</p>}
         <Button type="submit" loading={loading} className="w-full">
