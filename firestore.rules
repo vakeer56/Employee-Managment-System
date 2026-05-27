@@ -2,99 +2,38 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    function signedIn() {
-      return request.auth != null;
-    }
-
-    function isSelf(uid) {
-      return signedIn() && request.auth.uid == uid;
-    }
-
-    function hasUserProfile() {
-      return signedIn()
-        && exists(/databases/$(database)/documents/users/$(request.auth.uid));
-    }
-
-    function hasAnyRole(roles) {
-      return hasUserProfile()
-        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in roles;
-    }
-
-    function isHrAdmin() {
-      return hasAnyRole(['super_admin', 'hr_admin']);
-    }
-
-    function validUserProfile(uid) {
-      return request.resource.data.keys().hasOnly([
-          'uid',
-          'email',
-          'displayName',
-          'role',
-          'createdAt',
-        ])
-        && request.resource.data.keys().hasAll([
-          'uid',
-          'email',
-          'displayName',
-          'role',
-          'createdAt',
-        ])
-        && request.resource.data.uid == uid
-        && request.resource.data.email is string
-        && request.resource.data.displayName is string
-        && request.resource.data.role in [
-          'super_admin',
-          'hr_admin',
-          'manager',
-          'employee',
-        ];
-    }
 
     match /users/{uid} {
-      allow create: if isSelf(uid) && validUserProfile(uid);
-      allow read: if isSelf(uid) || isHrAdmin();
-      allow update: if isSelf(uid)
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-          'displayName',
-        ])
-        && request.resource.data.displayName is string;
-      allow update, delete: if isHrAdmin();
+      allow create: if request.auth != null && request.auth.uid == uid;
+      allow read, update: if request.auth != null && request.auth.uid == uid;
+      allow delete: if false;
     }
 
     match /employees/{employeeId} {
-      allow read: if signedIn();
-      allow create, update, delete: if isHrAdmin();
-    }
-
-    function validOrgSettings() {
-      return request.resource.data.keys().hasOnly([
-          'departments',
-          'designations',
-        ])
-        && request.resource.data.departments is list
-        && request.resource.data.designations is list;
+      allow read, write: if request.auth != null;
     }
 
     match /settings/org {
-      allow read: if signedIn();
-      allow create, update: if isHrAdmin() && validOrgSettings();
+      allow read: if request.auth != null;
+      allow create, update: if request.auth != null
+        && request.resource.data.keys().hasOnly([
+          'departments',
+          'designations'
+        ])
+        && request.resource.data.departments is list
+        && request.resource.data.designations is list;
+      allow delete: if false;
     }
 
-    function isManagerOrAdmin() {
-      return hasAnyRole(['super_admin', 'hr_admin', 'manager']);
-    }
-
+    // --- NEW RULES FOR LEAVE MANAGEMENT ---
     match /leaves/{leaveId} {
-      allow read: if signedIn();
-      allow create: if signedIn() && request.resource.data.employeeId == request.auth.uid;
-      allow update: if signedIn() && isManagerOrAdmin();
+      allow read, write: if request.auth != null;
     }
 
     match /leaveBalances/{balanceId} {
-      allow read: if signedIn();
-      allow create: if signedIn() && request.resource.data.employeeId == request.auth.uid;
-      allow update: if signedIn() && isManagerOrAdmin();
+      allow read, write: if request.auth != null;
     }
+    // --------------------------------------
 
     match /{document=**} {
       allow read, write: if false;
