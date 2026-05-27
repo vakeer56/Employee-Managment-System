@@ -2,6 +2,7 @@ import { Link, Outlet, useNavigate } from 'react-router-dom'
 import { logoutUser } from '../services/authService'
 import { useAuth } from '../hooks/useAuth'
 import { Button } from '../components/ui/Button'
+import { hasRole } from '../utils/roles'
 
 /** Main app shell after login (sidebar/header can grow here later) */
 export function AppLayout() {
@@ -17,9 +18,35 @@ export function AppLayout() {
     <div className="min-h-screen bg-gray-50">
       <header className="border-b border-gray-200 bg-white px-6 py-4">
         <div className="mx-auto flex max-w-6xl items-center justify-between">
-          <Link to="/dashboard" className="text-lg font-semibold text-gray-900">
-            HRMS
-          </Link>
+          <div className="flex items-center gap-6">
+            <Link to="/dashboard" className="text-lg font-semibold text-gray-900">
+              HRMS
+            </Link>
+            <nav className="flex gap-4 text-sm">
+              <Link to="/dashboard" className="text-gray-600 hover:text-gray-900">
+                Dashboard
+              </Link>
+              <Link to="/leaves" className="text-gray-600 hover:text-gray-900">
+                Leaves
+              </Link>
+              <Link to="/profile" className="text-gray-600 hover:text-gray-900">
+                My profile
+              </Link>
+              {hasRole(profile?.role, ['super_admin', 'hr_admin']) && (
+                <Link to="/employees" className="text-gray-600 hover:text-gray-900">
+                  Employees
+                </Link>
+              )}
+              {hasRole(profile?.role, ['super_admin', 'hr_admin']) && (
+                <Link
+                  to="/settings/org"
+                  className="text-gray-600 hover:text-gray-900"
+                >
+                  Org settings
+                </Link>
+              )}
+            </nav>
+          </div>
           <div className="flex items-center gap-4">
             <span className="text-sm text-gray-600">
               {profile?.displayName} ({profile?.role})

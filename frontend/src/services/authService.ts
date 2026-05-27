@@ -1,5 +1,6 @@
 import {
   createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signOut,
   type User,
@@ -43,6 +44,20 @@ export async function loginUser(
 
 export async function logoutUser(): Promise<void> {
   await signOut(auth)
+}
+
+/**
+ * Sends a password reset email (Firebase handles the link).
+ * For privacy, Firebase does not tell us if the email exists — same success either way.
+ */
+export async function sendPasswordReset(email: string): Promise<void> {
+  try {
+    await sendPasswordResetEmail(auth, email.trim())
+  } catch {
+    throw new Error(
+      'Could not send reset email. Check the address and try again.',
+    )
+  }
 }
 
 export async function fetchUserProfile(uid: string): Promise<AppUser | null> {

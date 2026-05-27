@@ -4,7 +4,12 @@ import { AppLayout } from '../layouts/AppLayout'
 import { ProtectedRoute } from './ProtectedRoute'
 import { LoginPage } from '../pages/auth/LoginPage'
 import { RegisterPage } from '../pages/auth/RegisterPage'
+import { ForgotPasswordPage } from '../pages/auth/ForgotPasswordPage'
 import { DashboardPage } from '../pages/DashboardPage'
+import { EmployeesPage } from '../pages/employees/EmployeesPage'
+import { MyProfilePage } from '../pages/profile/MyProfilePage'
+import { OrgSettingsPage } from '../pages/settings/OrgSettingsPage'
+import { LeaveDashboardPage } from '../pages/leave/LeaveDashboardPage'
 
 export function AppRoutes() {
   return (
@@ -14,18 +19,23 @@ export function AppRoutes() {
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         </Route>
 
         {/* Protected app pages */}
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
             <Route path="/dashboard" element={<DashboardPage />} />
-            {/* Example: HR-only route (uncomment when you add HR pages) */}
-            {/* <Route
-              element={<ProtectedRoute allowedRoles={['super_admin', 'hr_admin']} />}
+            <Route path="/leaves" element={<LeaveDashboardPage />} />
+            <Route path="/profile" element={<MyProfilePage />} />
+            <Route
+              element={
+                <ProtectedRoute allowedRoles={['super_admin', 'hr_admin']} />
+              }
             >
               <Route path="/employees" element={<EmployeesPage />} />
-            </Route> */}
+              <Route path="/settings/org" element={<OrgSettingsPage />} />
+            </Route>
           </Route>
         </Route>
 

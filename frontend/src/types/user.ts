@@ -8,7 +8,6 @@ export const USER_ROLES: { value: UserRole; label: string }[] = [
   { value: 'employee', label: 'Employee' },
 ]
 
-/** Profile stored in Firestore at `users/{uid}` */
 export interface AppUser {
   uid: string
   email: string
