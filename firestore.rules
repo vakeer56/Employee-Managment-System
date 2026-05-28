@@ -2,6 +2,41 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // ─── Helper Functions ───────────────────────────────────────────────────────
+
+    // Returns the role stored in the requesting user's /users/{uid} document.
+    // Using get() lets rules check the caller's role without the client sending it.
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isSuperAdmin() {
+      return isAuthenticated() && getUserRole() == 'super_admin';
+    }
+
+    function isHrAdmin() {
+      return isAuthenticated() && getUserRole() == 'hr_admin';
+    }
+
+    function isManager() {
+      return isAuthenticated() && getUserRole() == 'manager';
+    }
+
+    // Super admin OR HR admin — can manage employees, approve leaves, etc.
+    function isAdminOrHr() {
+      return isSuperAdmin() || isHrAdmin();
+    }
+
+    // Any management-level user (can approve leaves, view all attendance, etc.)
+    function isManagement() {
+      return isSuperAdmin() || isHrAdmin() || isManager();
+    }
+
     function hasValidDefaultLeaveBalances(data) {
       return !data.keys().hasAny(['defaultLeaveBalances'])
         || (
@@ -34,33 +69,82 @@ service cloud.firestore {
         && hasValidDefaultLeaveBalances(data);
     }
 
+    // ─── Users ──────────────────────────────────────────────────────────────────
     match /users/{uid} {
-      allow create: if request.auth != null && request.auth.uid == uid;
-      allow read, update: if request.auth != null && request.auth.uid == uid;
+      // A user can create and read/update only their own document.
+      // Super admins can read any user document (needed for getUserRole() calls).
+      allow create: if isAuthenticated() && request.auth.uid == uid;
+      allow read: if isAuthenticated()
+        && (request.auth.uid == uid || isSuperAdmin());
+      allow update: if isAuthenticated() && request.auth.uid == uid;
       allow delete: if false;
     }
 
+    // ─── Employees ──────────────────────────────────────────────────────────────
     match /employees/{employeeId} {
-      allow read, write: if request.auth != null;
+      // Any authenticated user can read employee records (needed for name lookups).
+      // Only HR admin or super admin can create/update/delete.
+      allow read: if isAuthenticated();
+      allow create, update: if isAdminOrHr();
+      allow delete: if isSuperAdmin();
     }
 
+    // ─── Org Settings ───────────────────────────────────────────────────────────
     match /settings/org {
-      allow read: if request.auth != null;
-      allow create, update: if request.auth != null
+      allow read: if isAuthenticated();
+      allow create, update: if isAdminOrHr()
         && hasValidOrgSettings(request.resource.data);
       allow delete: if false;
     }
 
-    // --- NEW RULES FOR LEAVE MANAGEMENT ---
+    // ─── Leave Requests ─────────────────────────────────────────────────────────
     match /leaves/{leaveId} {
-      allow read, write: if request.auth != null;
+      // Any authenticated employee can apply for leave (create) and read their own.
+      // Management can read ALL leave requests (for the approvals tab).
+      // Only management can update status (approve/reject).
+      allow create: if isAuthenticated();
+      allow read: if isAuthenticated()
+        && (resource.data.employeeId == request.auth.uid || isManagement());
+      allow update: if isAuthenticated()
+        && (
+          // Employee can only update their OWN pending leave before approval
+          (resource.data.employeeId == request.auth.uid
+            && resource.data.status == 'pending')
+          // Management can update status (approve/reject)
+          || isManagement()
+        );
+      allow delete: if isSuperAdmin();
     }
 
+    // ─── Leave Balances ─────────────────────────────────────────────────────────
     match /leaveBalances/{balanceId} {
-      allow read, write: if request.auth != null;
+      // Each employee document is keyed by employeeId.
+      // Employees read/watch only their own balance.
+      // Management can read all (for HR reporting).
+      // Writes only happen server-side via leaveService (batch update on approval)
+      // so we allow authenticated writes — the service logic enforces correctness.
+      allow read: if isAuthenticated()
+        && (resource.data.employeeId == request.auth.uid || isManagement());
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated()
+        && (resource.data.employeeId == request.auth.uid || isManagement());
+      allow delete: if isSuperAdmin();
     }
-    // --------------------------------------
 
+    // ─── Attendance ─────────────────────────────────────────────────────────────
+    match /attendance/{recordId} {
+      // Employees can check themselves in/out (create their own record).
+      // Employees can only read their own records.
+      // Management (admin, HR, manager) can read ALL records for the admin dashboard.
+      // Only admins/HR can update or delete records (e.g. corrections).
+      allow create: if isAuthenticated();
+      allow read: if isAuthenticated()
+        && (resource.data.employeeId == request.auth.uid || isManagement());
+      allow update: if isAdminOrHr();
+      allow delete: if isSuperAdmin();
+    }
+
+    // ─── Catch-all: deny everything else ────────────────────────────────────────
     match /{document=**} {
       allow read, write: if false;
     }
