@@ -29,12 +29,20 @@ export function AppLayout() {
               <Link to="/leaves" className="text-gray-600 hover:text-gray-900">
                 Leaves
               </Link>
+              <Link to="/attendance" className="text-gray-600 hover:text-gray-900">
+                Attendance
+              </Link>
               <Link to="/profile" className="text-gray-600 hover:text-gray-900">
                 My profile
               </Link>
               {hasRole(profile?.role, ['super_admin', 'hr_admin']) && (
                 <Link to="/employees" className="text-gray-600 hover:text-gray-900">
                   Employees
+                </Link>
+              )}
+              {hasRole(profile?.role, ['super_admin', 'hr_admin']) && (
+                <Link to="/attendance/admin" className="text-gray-600 hover:text-gray-900">
+                  Attendance Admin
                 </Link>
               )}
               {hasRole(profile?.role, ['super_admin', 'hr_admin']) && (

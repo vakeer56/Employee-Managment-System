@@ -10,6 +10,8 @@ import { EmployeesPage } from '../pages/employees/EmployeesPage'
 import { MyProfilePage } from '../pages/profile/MyProfilePage'
 import { OrgSettingsPage } from '../pages/settings/OrgSettingsPage'
 import { LeaveDashboardPage } from '../pages/leave/LeaveDashboardPage'
+import AttendancePage from '../pages/attendance/AttendancePage'
+import AdminAttendanceDashboard from '../pages/attendance/AdminAttendanceDashboard'
 
 export function AppRoutes() {
   return (
@@ -27,6 +29,7 @@ export function AppRoutes() {
           <Route element={<AppLayout />}>
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/leaves" element={<LeaveDashboardPage />} />
+            <Route path="/attendance" element={<AttendancePage />} />
             <Route path="/profile" element={<MyProfilePage />} />
             <Route
               element={
@@ -35,6 +38,7 @@ export function AppRoutes() {
             >
               <Route path="/employees" element={<EmployeesPage />} />
               <Route path="/settings/org" element={<OrgSettingsPage />} />
+              <Route path="/attendance/admin" element={<AdminAttendanceDashboard />} />
             </Route>
           </Route>
         </Route>
