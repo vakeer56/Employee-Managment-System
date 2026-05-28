@@ -25,9 +25,15 @@ export interface AttendanceRecord {
   updatedAt?: Timestamp | null;
 }
 
-// Helper to get today's date string (YYYY-MM-DD)
+// Helper to get today's date string (YYYY-MM-DD) in LOCAL time.
+// IMPORTANT: Do NOT use toISOString() here — it returns the date in UTC,
+// which means IST users (UTC+5:30) get yesterday's date until 5:30 AM.
 const getTodayDateString = (): string => {
-  return new Date().toISOString().split('T')[0];
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
 };
 
 // Helper to calculate working hours

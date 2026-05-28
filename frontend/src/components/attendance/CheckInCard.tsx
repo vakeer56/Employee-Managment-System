@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { AttendanceRecord } from '../../services/attendanceService';
 import { checkIn, checkOut, getTodayAttendance } from '../../services/attendanceService';
 import { Button } from '../ui/Button';
@@ -25,13 +25,46 @@ export default function CheckInCard({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  // Track which calendar date the card is showing so we can detect day roll-over.
+  const [todayString, setTodayString] = useState<string>(getLocalDateString);
 
-  // Load today's attendance on component mount
+  /** Returns YYYY-MM-DD in LOCAL time (not UTC) */
+  function getLocalDateString() {
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  // ── Midnight reset ─────────────────────────────────────────────────────────
+  // Schedule a timer that fires exactly at the next local midnight.
+  // When it fires: update todayString → the data-fetch useEffect re-runs
+  // → attendance is re-fetched for the new day → buttons reset.
   useEffect(() => {
-    loadTodayAttendance();
-  }, [employeeId]);
+    function msUntilMidnight() {
+      const now = new Date();
+      const midnight = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate() + 1, // tomorrow
+        0, 0, 0, 0,
+      );
+      return midnight.getTime() - now.getTime();
+    }
 
-  const loadTodayAttendance = async () => {
+    const timer = setTimeout(() => {
+      // Day has changed: clear stale state and update the tracked date.
+      setAttendance(null);
+      setError(null);
+      setSuccess(null);
+      setTodayString(getLocalDateString());
+    }, msUntilMidnight());
+
+    return () => clearTimeout(timer);
+  }, [todayString]); // re-schedule each time the date string changes
+
+  const loadTodayAttendance = useCallback(async () => {
     try {
       const record = await getTodayAttendance(employeeId);
       setAttendance(record as AttendanceRecord & { id: string });
@@ -39,7 +72,13 @@ export default function CheckInCard({
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load attendance');
     }
-  };
+  }, [employeeId]);
+
+  // Re-fetch whenever the employee changes OR the tracked date changes
+  // (the date changes at midnight via the timer above).
+  useEffect(() => {
+    loadTodayAttendance();
+  }, [loadTodayAttendance, todayString]);
 
   const handleCheckIn = async () => {
     setLoading(true);
