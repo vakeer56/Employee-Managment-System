@@ -25,22 +25,6 @@ export interface AttendanceRecord {
   updatedAt?: Timestamp | null;
 }
 
-// Helper function to format time for display
-const formatTime = (date: Date | Timestamp): string => {
-  if (date instanceof Timestamp) {
-    return date.toDate().toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-    });
-  }
-  return date.toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  });
-};
-
 // Helper to get today's date string (YYYY-MM-DD)
 const getTodayDateString = (): string => {
   return new Date().toISOString().split('T')[0];
@@ -334,9 +318,12 @@ export const getAllAttendance = async (
     let records = querySnapshot.docs.map((d) => ({ id: d.id, ...d.data() } as AttendanceRecord & { id: string }));
 
     // Apply remaining filters client-side
-    if (filters?.employeeId && (filters?.date || filters?.status)) {
-      if (filters.date) records = records.filter((r) => r.date === filters.date);
-      if (filters.status) records = records.filter((r) => r.status === filters.status as AttendanceRecord['status']);
+    if (filters?.date || filters?.status) {
+      if (filters?.date) records = records.filter((r) => r.date === filters.date);
+      if (filters?.status) {
+        const statusFilter = filters.status as AttendanceRecord['status'];
+        records = records.filter((r) => r.status === statusFilter);
+      }
     }
 
     // Sort by date descending and apply page limit
@@ -388,20 +375,23 @@ export const getAttendanceStats = async () => {
  */
 export const searchAttendance = async (searchTerm: string, pageSize: number = 20) => {
   try {
-    const q = query(collection(db, 'attendance'), orderBy('date', 'desc'), limit(pageSize));
+    // Fetch all records and filter + sort client-side to avoid needing
+    // a composite index (orderBy alone on a large collection is fine,
+    // but combining it with where would need an index).
+    const q = query(collection(db, 'attendance'));
     const querySnapshot = await getDocs(q);
 
-    const allRecords = querySnapshot.docs.map((d) => ({
-      id: d.id,
-      ...d.data(),
-    }));
+    const term = searchTerm.toLowerCase();
 
-    // Filter on client side (Firestore doesn't support case-insensitive search)
-    return allRecords.filter(
-      (record) =>
-        record.employeeName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        record.employeeId?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    return querySnapshot.docs
+      .map((d) => ({ id: d.id, ...d.data() } as AttendanceRecord & { id: string }))
+      .filter(
+        (record) =>
+          record.employeeName?.toLowerCase().includes(term) ||
+          record.employeeId?.toLowerCase().includes(term)
+      )
+      .sort((a, b) => b.date.localeCompare(a.date))
+      .slice(0, pageSize);
   } catch (error) {
     throw new Error(
       `Failed to search attendance: ${error instanceof Error ? error.message : 'Unknown error'}`
