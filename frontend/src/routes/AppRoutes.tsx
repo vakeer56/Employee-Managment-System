@@ -12,6 +12,8 @@ import { OrgSettingsPage } from '../pages/settings/OrgSettingsPage'
 import { LeaveDashboardPage } from '../pages/leave/LeaveDashboardPage'
 import AttendancePage from '../pages/attendance/AttendancePage'
 import AdminAttendanceDashboard from '../pages/attendance/AdminAttendanceDashboard'
+import OrganizationChartPage from '../pages/orgChart/OrganizationChartPage'
+import { SeedDataPage } from '../pages/admin/SeedDataPage'
 
 export function AppRoutes() {
   return (
@@ -30,6 +32,7 @@ export function AppRoutes() {
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/leaves" element={<LeaveDashboardPage />} />
             <Route path="/attendance" element={<AttendancePage />} />
+            <Route path="/org-chart" element={<OrganizationChartPage />} />
             <Route path="/profile" element={<MyProfilePage />} />
             <Route
               element={
@@ -39,6 +42,13 @@ export function AppRoutes() {
               <Route path="/employees" element={<EmployeesPage />} />
               <Route path="/settings/org" element={<OrgSettingsPage />} />
               <Route path="/attendance/admin" element={<AdminAttendanceDashboard />} />
+            </Route>
+
+            {/* Super-admin only: dev tools */}
+            <Route
+              element={<ProtectedRoute allowedRoles={['super_admin']} />}
+            >
+              <Route path="/admin/seed-data" element={<SeedDataPage />} />
             </Route>
           </Route>
         </Route>

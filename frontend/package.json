@@ -10,9 +10,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
     "firebase": "^12.13.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
+    "react-organizational-chart": "^2.2.1",
     "react-router-dom": "^7.15.1"
   },
   "devDependencies": {

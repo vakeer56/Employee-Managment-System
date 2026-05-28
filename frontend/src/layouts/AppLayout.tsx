@@ -32,6 +32,9 @@ export function AppLayout() {
               <Link to="/attendance" className="text-gray-600 hover:text-gray-900">
                 Attendance
               </Link>
+              <Link to="/org-chart" className="text-gray-600 hover:text-gray-900">
+                Org Chart
+              </Link>
               <Link to="/profile" className="text-gray-600 hover:text-gray-900">
                 My profile
               </Link>
