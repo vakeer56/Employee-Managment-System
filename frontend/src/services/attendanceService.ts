@@ -114,11 +114,7 @@ export const checkIn = async (employeeId: string, employeeName: string) => {
   }
 };
 
-/**
- * Check-out employee for today
- * @param employeeId - Employee ID
- * @returns Updated attendance record with working hours
- */
+
 export const checkOut = async (employeeId: string) => {
   try {
     const today = getTodayDateString();
@@ -175,11 +171,7 @@ export const checkOut = async (employeeId: string) => {
   }
 };
 
-/**
- * Get today's attendance record for an employee
- * @param employeeId - Employee ID
- * @returns Attendance record or null
- */
+
 export const getTodayAttendance = async (employeeId: string) => {
   try {
     const today = getTodayDateString();
@@ -240,13 +232,8 @@ export const getEmployeeAttendance = async (
   }
 };
 
-/**
- * Get monthly summary for an employee
- * @param employeeId - Employee ID
- * @param year - Year (default: current)
- * @param month - Month 1-12 (default: current)
- * @returns Summary object with counts
- */
+
+
 export const getMonthlySummary = async (employeeId: string, year?: number, month?: number) => {
   try {
     const now = new Date();
@@ -286,12 +273,7 @@ export const getMonthlySummary = async (employeeId: string, year?: number, month
   }
 };
 
-/**
- * Get all attendance records (Admin only)
- * @param filters - Filter criteria (employeeId, date, status, department)
- * @param pageSize - Records per page
- * @returns Array of attendance records
- */
+
 export const getAllAttendance = async (
   filters?: {
     employeeId?: string;
@@ -337,10 +319,7 @@ export const getAllAttendance = async (
   }
 };
 
-/**
- * Get attendance statistics for admin dashboard
- * @returns Stats object
- */
+
 export const getAttendanceStats = async () => {
   try {
     const today = getTodayDateString();
@@ -367,12 +346,6 @@ export const getAttendanceStats = async () => {
   }
 };
 
-/**
- * Search attendance records
- * @param searchTerm - Search by employee name or ID
- * @param pageSize - Records per page
- * @returns Array of matching records
- */
 export const searchAttendance = async (searchTerm: string, pageSize: number = 20) => {
   try {
     // Fetch all records and filter + sort client-side to avoid needing
