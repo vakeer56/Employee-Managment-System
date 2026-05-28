@@ -7,6 +7,7 @@ import {
   getOrgSettings,
   removeDepartment,
   removeDesignation,
+  updateDefaultLeaveBalances,
 } from '../../services/orgSettingsService'
 
 export function OrgSettingsPage() {
@@ -14,13 +15,23 @@ export function OrgSettingsPage() {
   const [designations, setDesignations] = useState<string[]>([])
   const [newDepartment, setNewDepartment] = useState('')
   const [newDesignation, setNewDesignation] = useState('')
+  const [leaveBalances, setLeaveBalances] = useState({
+    casualLeave: 0,
+    sickLeave: 0,
+    earnedLeave: 0,
+    wfh: 0
+  })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [successMsg, setSuccessMsg] = useState('')
 
   async function refresh() {
     const org = await getOrgSettings()
     setDepartments(org.departments)
     setDesignations(org.designations)
+    if (org.defaultLeaveBalances) {
+      setLeaveBalances(org.defaultLeaveBalances)
+    }
   }
 
   useEffect(() => {
@@ -93,6 +104,21 @@ export function OrgSettingsPage() {
     } catch (err) {
       setError(
         err instanceof Error ? err.message : 'Could not remove designation.',
+      )
+    }
+  }
+
+  async function handleSaveLeaveBalances(e: FormEvent) {
+    e.preventDefault()
+    setError('')
+    setSuccessMsg('')
+    try {
+      await updateDefaultLeaveBalances(leaveBalances)
+      setSuccessMsg('Leave balances updated successfully.')
+      setTimeout(() => setSuccessMsg(''), 3000)
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : 'Could not save leave balances.',
       )
     }
   }
@@ -186,6 +212,53 @@ export function OrgSettingsPage() {
               ))
             )}
           </ul>
+        </section>
+      </div>
+
+      <div className="mt-8">
+        <section className="rounded-lg border border-gray-200 bg-white p-6 max-w-2xl">
+          <h2 className="text-lg font-medium text-gray-900 mb-4">Default Leave Balances</h2>
+          <p className="text-sm text-gray-600 mb-6">
+            Set the default number of leave days allocated to new employees.
+          </p>
+          
+          <form onSubmit={handleSaveLeaveBalances} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <Input
+                label="Casual Leave"
+                type="number"
+                min="0"
+                value={leaveBalances.casualLeave.toString()}
+                onChange={(e) => setLeaveBalances({ ...leaveBalances, casualLeave: parseInt(e.target.value) || 0 })}
+              />
+              <Input
+                label="Sick Leave"
+                type="number"
+                min="0"
+                value={leaveBalances.sickLeave.toString()}
+                onChange={(e) => setLeaveBalances({ ...leaveBalances, sickLeave: parseInt(e.target.value) || 0 })}
+              />
+              <Input
+                label="Earned Leave"
+                type="number"
+                min="0"
+                value={leaveBalances.earnedLeave.toString()}
+                onChange={(e) => setLeaveBalances({ ...leaveBalances, earnedLeave: parseInt(e.target.value) || 0 })}
+              />
+              <Input
+                label="Work From Home"
+                type="number"
+                min="0"
+                value={leaveBalances.wfh.toString()}
+                onChange={(e) => setLeaveBalances({ ...leaveBalances, wfh: parseInt(e.target.value) || 0 })}
+              />
+            </div>
+            
+            <div className="flex items-center gap-4">
+              <Button type="submit">Save Balances</Button>
+              {successMsg && <span className="text-sm text-green-600">{successMsg}</span>}
+            </div>
+          </form>
         </section>
       </div>
     </div>

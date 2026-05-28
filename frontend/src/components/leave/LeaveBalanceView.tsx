@@ -1,28 +1,53 @@
 import { useEffect, useState } from 'react'
 import type { LeaveBalance } from '../../types/leave'
-import { getOrInitializeLeaveBalance } from '../../services/leaveService'
+import { getOrInitializeLeaveBalance, subscribeToLeaveBalance } from '../../services/leaveService'
 import { useAuth } from '../../hooks/useAuth'
 
-export function LeaveBalanceView() {
+export function LeaveBalanceView({ refreshKey = 0 }: { refreshKey?: number }) {
   const { firebaseUser } = useAuth()
   const [balance, setBalance] = useState<LeaveBalance | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    async function fetchBalance() {
-      if (firebaseUser) {
-        try {
-          const b = await getOrInitializeLeaveBalance(firebaseUser.uid)
-          setBalance(b)
-        } catch (error) {
-          console.error("Failed to load leave balance", error)
-        } finally {
+    if (!firebaseUser) {
+      setBalance(null)
+      setLoading(false)
+      return
+    }
+
+    setLoading(true)
+    let cancelled = false
+
+
+    const unsubscribe = subscribeToLeaveBalance(
+      firebaseUser.uid,
+      (updatedBalance) => {
+        if (!cancelled) {
+          setBalance(updatedBalance)
           setLoading(false)
         }
+      },
+      (error) => {
+        if (!cancelled) {
+          console.error('Failed to watch leave balance', error)
+          setLoading(false)
+        }
+      },
+    )
+
+    getOrInitializeLeaveBalance(firebaseUser.uid).catch((error) => {
+      if (!cancelled) {
+        console.error('Failed to initialize leave balance', error)
+        setLoading(false)
       }
+    })
+
+    return () => {
+      cancelled = true
+      unsubscribe()
     }
-    fetchBalance()
-  }, [firebaseUser])
+
+  }, [firebaseUser, refreshKey])
 
   if (loading) return <div className="text-gray-500 text-sm">Loading balances...</div>
   if (!balance) return null

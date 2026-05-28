@@ -19,6 +19,10 @@ export function LeaveDashboardPage() {
     setActiveTab('my_leaves')
   }
 
+  const handleApprovalUpdated = () => {
+    setRefreshKey(prev => prev + 1)
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -26,7 +30,7 @@ export function LeaveDashboardPage() {
         <p className="text-gray-600">Manage your time off, view balances, and approve requests.</p>
       </div>
 
-      <LeaveBalanceView />
+      <LeaveBalanceView refreshKey={refreshKey} />
 
       <div className="bg-white rounded-lg shadow-sm border border-gray-100">
         <div className="border-b border-gray-200">
@@ -79,7 +83,7 @@ export function LeaveDashboardPage() {
         <div className="p-6 bg-gray-50">
           {activeTab === 'my_leaves' && <MyLeavesList refreshKey={refreshKey} />}
           {activeTab === 'apply' && <ApplyLeaveForm onApplied={handleLeaveApplied} />}
-          {activeTab === 'approvals' && isManagerOrAdmin && <ManagerApprovals />}
+          {activeTab === 'approvals' && isManagerOrAdmin && <ManagerApprovals onApprovalUpdated={handleApprovalUpdated} />}
           {activeTab === 'holidays' && <HolidayCalendar />}
         </div>
       </div>

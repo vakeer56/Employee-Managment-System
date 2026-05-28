@@ -39,8 +39,8 @@ export function ApplyLeaveForm({ onApplied }: { onApplied: () => void }) {
       setEndDate('')
       setReason('')
       onApplied()
-    } catch (err: any) {
-      setError(err.message || 'Failed to apply for leave')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to apply for leave')
     } finally {
       setLoading(false)
     }

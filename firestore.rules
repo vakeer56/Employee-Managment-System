@@ -2,6 +2,37 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    function hasValidDefaultLeaveBalances(data) {
+      return !data.keys().hasAny(['defaultLeaveBalances'])
+        || (
+          data.defaultLeaveBalances is map
+          && data.defaultLeaveBalances.keys().hasOnly([
+            'casualLeave',
+            'sickLeave',
+            'earnedLeave',
+            'wfh'
+          ])
+          && data.defaultLeaveBalances.casualLeave is number
+          && data.defaultLeaveBalances.sickLeave is number
+          && data.defaultLeaveBalances.earnedLeave is number
+          && data.defaultLeaveBalances.wfh is number
+          && data.defaultLeaveBalances.casualLeave >= 0
+          && data.defaultLeaveBalances.sickLeave >= 0
+          && data.defaultLeaveBalances.earnedLeave >= 0
+          && data.defaultLeaveBalances.wfh >= 0
+        );
+    }
+
+    function hasValidOrgSettings(data) {
+      return data.keys().hasOnly([
+          'departments',
+          'designations',
+          'defaultLeaveBalances'
+        ])
+        && data.departments is list
+        && data.designations is list
+        && hasValidDefaultLeaveBalances(data);
+    }
 
     match /users/{uid} {
       allow create: if request.auth != null && request.auth.uid == uid;
@@ -16,12 +47,7 @@ service cloud.firestore {
     match /settings/org {
       allow read: if request.auth != null;
       allow create, update: if request.auth != null
-        && request.resource.data.keys().hasOnly([
-          'departments',
-          'designations'
-        ])
-        && request.resource.data.departments is list
-        && request.resource.data.designations is list;
+        && hasValidOrgSettings(request.resource.data);
       allow delete: if false;
     }
 

@@ -6,7 +6,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
 
-export function ManagerApprovals() {
+export function ManagerApprovals({ onApprovalUpdated }: { onApprovalUpdated?: () => void }) {
   const { profile } = useAuth()
   const [leaves, setLeaves] = useState<LeaveRequest[]>([])
   const [loading, setLoading] = useState(true)
@@ -30,22 +30,19 @@ export function ManagerApprovals() {
 
   const handleAction = async (leave: LeaveRequest, status: LeaveStatusType) => {
     try {
-      // Calculate days
-      const start = new Date(leave.startDate)
-      const end = new Date(leave.endDate)
-      const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 3600 * 24)) + 1
-
       await updateLeaveStatus(
         leave.id!, 
         status, 
-        remarks[leave.id!] || '', 
-        leave.employeeId, 
-        leave.type, 
-        days
+        remarks[leave.id!] || ''
       )
       
       // Remove from list
       setLeaves(leaves.filter(l => l.id !== leave.id))
+      
+      // Trigger refresh of balance and other components
+      if (onApprovalUpdated) {
+        onApprovalUpdated()
+      }
     } catch (err) {
       console.error("Failed to update leave status", err)
       alert("Failed to update status")
