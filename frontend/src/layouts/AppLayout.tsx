@@ -38,6 +38,9 @@ export function AppLayout() {
               <Link to="/profile" className="text-gray-600 hover:text-gray-900">
                 My profile
               </Link>
+              <Link to="/payroll/my" className="text-gray-600 hover:text-gray-900">
+                My Payroll
+              </Link>
               {hasRole(profile?.role, ['super_admin', 'hr_admin']) && (
                 <Link to="/employees" className="text-gray-600 hover:text-gray-900">
                   Employees
@@ -46,6 +49,16 @@ export function AppLayout() {
               {hasRole(profile?.role, ['super_admin', 'hr_admin']) && (
                 <Link to="/attendance/admin" className="text-gray-600 hover:text-gray-900">
                   Attendance Admin
+                </Link>
+              )}
+              {hasRole(profile?.role, ['super_admin', 'hr_admin']) && (
+                <Link to="/payroll" className="text-gray-600 hover:text-gray-900">
+                  Payroll
+                </Link>
+              )}
+              {hasRole(profile?.role, ['super_admin', 'hr_admin']) && (
+                <Link to="/payroll/structures" className="text-gray-600 hover:text-gray-900">
+                  Salary Structures
                 </Link>
               )}
               {hasRole(profile?.role, ['super_admin', 'hr_admin']) && (

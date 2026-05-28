@@ -14,6 +14,10 @@ import AttendancePage from '../pages/attendance/AttendancePage'
 import AdminAttendanceDashboard from '../pages/attendance/AdminAttendanceDashboard'
 import OrganizationChartPage from '../pages/orgChart/OrganizationChartPage'
 import { SeedDataPage } from '../pages/admin/SeedDataPage'
+import { PayrollPage } from '../pages/payroll/PayrollPage'
+import { SalaryStructuresPage } from '../pages/payroll/SalaryStructuresPage'
+import { SalarySlipPage } from '../pages/payroll/SalarySlipPage'
+import { MyPayrollPage } from '../pages/payroll/MyPayrollPage'
 
 export function AppRoutes() {
   return (
@@ -34,6 +38,9 @@ export function AppRoutes() {
             <Route path="/attendance" element={<AttendancePage />} />
             <Route path="/org-chart" element={<OrganizationChartPage />} />
             <Route path="/profile" element={<MyProfilePage />} />
+            {/* Payroll — all authenticated employees can see their own */}
+            <Route path="/payroll/my" element={<MyPayrollPage />} />
+            <Route path="/payroll/slip/:id" element={<SalarySlipPage />} />
             <Route
               element={
                 <ProtectedRoute allowedRoles={['super_admin', 'hr_admin']} />
@@ -42,6 +49,9 @@ export function AppRoutes() {
               <Route path="/employees" element={<EmployeesPage />} />
               <Route path="/settings/org" element={<OrgSettingsPage />} />
               <Route path="/attendance/admin" element={<AdminAttendanceDashboard />} />
+              {/* Payroll admin */}
+              <Route path="/payroll" element={<PayrollPage />} />
+              <Route path="/payroll/structures" element={<SalaryStructuresPage />} />
             </Route>
 
             {/* Super-admin only: dev tools */}
