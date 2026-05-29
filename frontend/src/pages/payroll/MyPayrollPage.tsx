@@ -20,8 +20,8 @@ import { PayrollTable } from '../../components/payroll/PayrollTable'
 import { formatCurrency, monthLabel } from '../../types/payroll'
 
 export function MyPayrollPage() {
-  const { profile } = useAuth()
-  const employeeId = profile?.uid ?? ''
+  const { profile, employeeRecord } = useAuth()
+  const employeeId = employeeRecord?.id ?? profile?.uid ?? ''
 
   const { payrolls, loading, error } = useEmployeePayroll(employeeId)
   const { structure } = useSalaryStructure(employeeId)
@@ -49,6 +49,12 @@ export function MyPayrollPage() {
           View your salary details and download your salary slips.
         </p>
       </div>
+
+      {!employeeRecord && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          No employee record matches your login email ({profile?.email}). Ask HR to create an employee profile for you so your payroll is properly linked to your official record.
+        </div>
+      )}
 
       {error && (
         <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">

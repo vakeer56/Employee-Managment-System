@@ -7,7 +7,7 @@ import { useState } from 'react';
 
 export default function AttendancePage() {
 
-  const { firebaseUser, profile } = useAuth();
+  const { firebaseUser, profile, employeeRecord } = useAuth();
   const [refreshKey, setRefreshKey] = useState(0);
 
   if (!firebaseUser || !profile) {
@@ -19,6 +19,8 @@ export default function AttendancePage() {
       </div>
     );
   }
+
+  const actualEmployeeId = employeeRecord?.id || profile.uid;
 
   const handleCheckInSuccess = () => {
     setRefreshKey((prev) => prev + 1);
@@ -36,11 +38,17 @@ export default function AttendancePage() {
         <p className="text-gray-600 mt-1">Manage your attendance and view history</p>
       </div>
 
+      {!employeeRecord && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          No employee record matches your login email ({firebaseUser.email}). Ask HR to create an employee profile for you so your attendance is properly linked to your official record.
+        </div>
+      )}
+
       {/* Check-in Card */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1">
           <CheckInCard
-            employeeId={profile.uid}
+            employeeId={actualEmployeeId}
             employeeName={profile.displayName || 'Employee'}
             onCheckInSuccess={handleCheckInSuccess}
             onCheckOutSuccess={handleCheckOutSuccess}
@@ -49,12 +57,12 @@ export default function AttendancePage() {
 
         {/* Summary Cards */}
         <div className="lg:col-span-2">
-          <SummaryCards employeeId={profile.uid} />
+          <SummaryCards employeeId={actualEmployeeId} />
         </div>
       </div>
 
       {/* Attendance Table */}
-      <AttendanceTable key={refreshKey} employeeId={profile.uid} title="Your Attendance History" />
+      <AttendanceTable key={refreshKey} employeeId={actualEmployeeId} title="Your Attendance History" />
     </div>
   );
 }
