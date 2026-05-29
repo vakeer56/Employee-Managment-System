@@ -3,11 +3,13 @@ import type { LeaveRequest, LeaveStatus as LeaveStatusType } from '../../types/l
 import { LeaveStatus } from '../../types/leave'
 import { getPendingLeavesForManager, updateLeaveStatus } from '../../services/leaveService'
 import { useAuth } from '../../hooks/useAuth'
+import { useDashboardRefresh } from '../../context/DashboardRefreshContext'
 import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
 
 export function ManagerApprovals({ onApprovalUpdated }: { onApprovalUpdated?: () => void }) {
   const { profile } = useAuth()
+  const { triggerRefresh } = useDashboardRefresh()
   const [leaves, setLeaves] = useState<LeaveRequest[]>([])
   const [loading, setLoading] = useState(true)
   const [remarks, setRemarks] = useState<Record<string, string>>({})
@@ -39,7 +41,10 @@ export function ManagerApprovals({ onApprovalUpdated }: { onApprovalUpdated?: ()
       // Remove from list
       setLeaves(leaves.filter(l => l.id !== leave.id))
       
-      // Trigger refresh of balance and other components
+      // Trigger dashboard refresh
+      triggerRefresh()
+      
+      // Trigger additional callback if provided
       if (onApprovalUpdated) {
         onApprovalUpdated()
       }

@@ -1,18 +1,16 @@
 import { useAuth } from '../hooks/useAuth'
+import { AdminDashboard } from '../components/dashboard/AdminDashboard'
+import { EmployeeDashboard } from '../components/dashboard/EmployeeDashboard'
 
 export function DashboardPage() {
   const { profile } = useAuth()
 
-  return (
-    <div>
-      <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
-      <p className="mt-2 text-gray-600">
-        Welcome, {profile?.displayName}. Your role is{' '}
-        <span className="font-medium">{profile?.role}</span>.
-      </p>
-      <p className="mt-4 text-sm text-gray-500">
-       welcome to Our Dashboard
-      </p>
-    </div>
-  )
+  if (!profile) return null
+
+  // Route to Admin or Employee dashboard based on role
+  if (profile.role === 'super_admin' || profile.role === 'hr_admin') {
+    return <AdminDashboard />
+  }
+
+  return <EmployeeDashboard />
 }
