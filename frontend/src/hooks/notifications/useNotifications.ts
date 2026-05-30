@@ -13,27 +13,35 @@ export function useNotifications(userId: string | undefined) {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    console.log(`[DEBUG-HOOK] useNotifications effect triggered with userId: "${userId}"`)
     if (!userId) {
+      console.log(`[DEBUG-HOOK] No userId provided, clearing notifications`)
       setNotifications([])
       setLoading(false)
       return
     }
 
+    console.log(`[DEBUG-HOOK] Setting up subscription for userId: "${userId}"`)
     setLoading(true)
     const unsubscribe = subscribeToNotifications(
       userId,
       (data) => {
+        console.log(`[DEBUG-HOOK] Callback received ${data.length} notifications for userId: "${userId}"`)
         setNotifications(data)
         setLoading(false)
         setError(null)
       },
       (err) => {
+        console.log(`[DEBUG-HOOK] Error callback for userId: "${userId}":`, err)
         setError(err.message || 'Failed to load notifications')
         setLoading(false)
       }
     )
 
-    return () => unsubscribe()
+    return () => {
+      console.log(`[DEBUG-HOOK] Unsubscribing for userId: "${userId}"`)
+      unsubscribe()
+    }
   }, [userId])
 
   const unreadCount = notifications.filter((n) => !n.isRead).length

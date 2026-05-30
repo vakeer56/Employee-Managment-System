@@ -7,8 +7,10 @@ import type { NotificationType } from '../../types/notification'
 export function NotificationBell() {
   const { profile, employeeRecord } = useAuth()
   const userId = employeeRecord?.id ?? profile?.uid
+  console.log(`[DEBUG-BELL] NotificationBell rendered with userId: "${userId}", employeeRecord.id: "${employeeRecord?.id}", profile.uid: "${profile?.uid}"`)
   const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification } =
     useNotifications(userId)
+  console.log(`[DEBUG-BELL] Unread count: ${unreadCount}, Total notifications: ${notifications.length}`)
 
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)

@@ -32,12 +32,14 @@ function toNotificationRecord(id: string, data: DocumentData): NotificationRecor
         ? createdAt
         : createdAt?.toDate?.()?.toISOString() ?? new Date().toISOString(),
     createdBy: data.createdBy ?? 'system',
+    announcementId: data.announcementId,
   }
 }
 
 /** Create a notification document in Firestore */
 export async function createNotification(input: NotificationInput): Promise<NotificationRecord> {
   try {
+    console.log(`[DEBUG-CREATE-NOTIF] BEFORE write - userId: "${input.userId}", title: "${input.title}", type: "${input.type}", announcementId: "${input.announcementId}"`)
     const docRef = await addDoc(collection(db, NOTIFICATIONS_COLLECTION), {
       userId: input.userId,
       title: input.title,
@@ -45,8 +47,10 @@ export async function createNotification(input: NotificationInput): Promise<Noti
       type: input.type,
       isRead: input.isRead ?? false,
       createdBy: input.createdBy ?? 'system',
+      announcementId: input.announcementId,
       createdAt: serverTimestamp(),
     })
+    console.log(`[DEBUG-CREATE-NOTIF] ✓ AFTER write - Document ID: "${docRef.id}"`)
     
     return {
       id: docRef.id,
@@ -56,10 +60,11 @@ export async function createNotification(input: NotificationInput): Promise<Noti
       type: input.type,
       isRead: input.isRead ?? false,
       createdBy: input.createdBy ?? 'system',
+      announcementId: input.announcementId,
       createdAt: new Date().toISOString(),
     }
   } catch (error) {
-    console.error('Error creating notification:', error)
+    console.error('[DEBUG-CREATE-NOTIF] ✗ ERROR:', error)
     throw new Error('Failed to create notification')
   }
 }
@@ -130,6 +135,7 @@ export function subscribeToNotifications(
   callback: (notifications: NotificationRecord[]) => void,
   onError?: (error: Error) => void
 ) {
+  console.log(`[DEBUG-QUERY] SUBSCRIBED for userId: "${userId}"`)
   const q = query(
     collection(db, NOTIFICATIONS_COLLECTION),
     where('userId', '==', userId),
@@ -139,11 +145,22 @@ export function subscribeToNotifications(
   return onSnapshot(
     q,
     (snap) => {
+      console.log(`[DEBUG-QUERY] Query returned ${snap.docs.length} documents for userId: "${userId}"`)
+      if (snap.docs.length > 0) {
+        console.log(`[DEBUG-QUERY] Sample doc:`, {
+          id: snap.docs[0].id,
+          userId: snap.docs[0].data().userId,
+          title: snap.docs[0].data().title,
+          type: snap.docs[0].data().type,
+          isRead: snap.docs[0].data().isRead,
+          announcementId: snap.docs[0].data().announcementId,
+        })
+      }
       const records = snap.docs.map((d) => toNotificationRecord(d.id, d.data()))
       callback(records)
     },
     (err) => {
-      console.error('Real-time notifications subscription error:', err)
+      console.error('[DEBUG-QUERY] ✗ Subscription error:', err)
       if (onError) onError(err)
     }
   )

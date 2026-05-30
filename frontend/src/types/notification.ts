@@ -9,6 +9,7 @@ export interface NotificationRecord {
   isRead: boolean
   createdAt: string
   createdBy: string
+  announcementId?: string
 }
 
 export interface NotificationInput {
@@ -18,4 +19,5 @@ export interface NotificationInput {
   type: NotificationType
   isRead?: boolean
   createdBy?: string
+  announcementId?: string
 }
