@@ -7,7 +7,7 @@ import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
 
 export function ApplyLeaveForm({ onApplied }: { onApplied: () => void }) {
-  const { profile, firebaseUser } = useAuth()
+  const { profile, firebaseUser, employeeRecord } = useAuth()
   const [type, setType] = useState<LeaveTypeType>(LeaveType.CASUAL)
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
@@ -26,8 +26,10 @@ export function ApplyLeaveForm({ onApplied }: { onApplied: () => void }) {
         throw new Error('Start date cannot be after end date')
       }
 
+      const activeUserId = employeeRecord?.id ?? firebaseUser.uid
+
       await applyForLeave({
-        employeeId: firebaseUser.uid,
+        employeeId: activeUserId,
         employeeName: profile.displayName || 'Employee',
         type,
         startDate,

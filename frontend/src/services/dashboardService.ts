@@ -218,7 +218,7 @@ export function subscribeToAdminDashboardStats(
   // Subscribe to leaves collection for real-time updates
   const unsubscribe = onSnapshot(
     collection(db, 'leaves'),
-    async (snapshot) => {
+    async (_snapshot) => {
       try {
         // When leaves change, refetch all dashboard stats
         const stats = await getAdminDashboardStats()

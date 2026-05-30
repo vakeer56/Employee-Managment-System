@@ -18,7 +18,9 @@ import type { LeaveRequest, LeaveBalance, LeaveStatus as LeaveStatusType, Holida
 import { LeaveStatus, LeaveType } from '../types/leave'
 
 import { getOrgSettings } from './orgSettingsService'
-
+import { getEmployeeById } from './employeeService'
+import { createNotification } from './notifications/notificationService'
+import { sendEmail, emailTemplates } from './notifications/emailService'
 const LEAVES_COLLECTION = 'leaves'
 const LEAVE_BALANCES_COLLECTION = 'leaveBalances'
 const HOLIDAYS_COLLECTION = 'holidays'
@@ -140,6 +142,46 @@ export async function applyForLeave(request: Omit<LeaveRequest, 'id' | 'status' 
   }
   
   const docRef = await addDoc(collection(db, LEAVES_COLLECTION), newRequest)
+
+  // Trigger notifications asynchronously
+  ;(async () => {
+    try {
+
+      const employee = await getEmployeeById(request.employeeId)
+      if (employee) {
+        // 1. Notify employee
+        await createNotification({
+          userId: employee.id,
+          title: 'Leave Request Submitted',
+          message: `Your leave request for ${request.type} from ${request.startDate} to ${request.endDate} has been submitted successfully.`,
+          type: 'leave',
+          createdBy: 'system',
+        })
+
+        // 2. Notify manager if exists
+        if (employee.managerId) {
+          await createNotification({
+            userId: employee.managerId,
+            title: 'New Leave Request Received',
+            message: `${employee.name} has submitted a leave request for ${request.type} from ${request.startDate} to ${request.endDate}.`,
+            type: 'leave',
+            createdBy: employee.id,
+          })
+
+          const manager = await getEmployeeById(employee.managerId)
+          if (manager && manager.email) {
+            await sendEmail({
+              ...emailTemplates.leaveSubmitted(employee.name, request.startDate, request.endDate, request.type),
+              to: manager.email,
+            })
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Failed to send leave submission notifications:', err)
+    }
+  })()
+
   return docRef.id
 }
 
@@ -199,6 +241,41 @@ export async function updateLeaveStatus(
   }
 
   await batch.commit()
+
+  // Trigger notification asynchronously
+  ;(async () => {
+    try {
+
+      const employee = await getEmployeeById(leave.employeeId)
+      if (employee) {
+        const statusLabel = status === 'APPROVED' ? 'Approved' : 'Rejected'
+        await createNotification({
+          userId: leave.employeeId,
+          title: `Leave Request ${statusLabel}`,
+          message: `Your leave request for ${leave.type} from ${leave.startDate} to ${leave.endDate} has been ${statusLabel.toLowerCase()}.${
+            managerRemarks ? ` Remarks: ${managerRemarks}` : ''
+          }`,
+          type: 'leave',
+          createdBy: 'system',
+        })
+
+        if (employee.email) {
+          await sendEmail(
+            emailTemplates.leaveStatusUpdated(
+              employee.email,
+              employee.name,
+              status as 'APPROVED' | 'REJECTED',
+              leave.startDate,
+              leave.endDate,
+              managerRemarks
+            )
+          )
+        }
+      }
+    } catch (err) {
+      console.error('Failed to send leave status update notifications:', err)
+    }
+  })()
 }
 
 export async function getHolidays(): Promise<Holiday[]> {

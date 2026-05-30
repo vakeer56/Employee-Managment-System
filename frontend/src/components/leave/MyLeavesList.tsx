@@ -5,7 +5,7 @@ import { getEmployeeLeaves } from '../../services/leaveService'
 import { useAuth } from '../../hooks/useAuth'
 
 export function MyLeavesList({ refreshKey }: { refreshKey: number }) {
-  const { firebaseUser } = useAuth()
+  const { firebaseUser, employeeRecord } = useAuth()
   const [leaves, setLeaves] = useState<LeaveRequest[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -13,7 +13,8 @@ export function MyLeavesList({ refreshKey }: { refreshKey: number }) {
     async function fetchLeaves() {
       if (firebaseUser) {
         try {
-          const data = await getEmployeeLeaves(firebaseUser.uid)
+          const activeUserId = employeeRecord?.id ?? firebaseUser.uid
+          const data = await getEmployeeLeaves(activeUserId)
           // Sort by appliedOn descending
           data.sort((a, b) => new Date(b.appliedOn).getTime() - new Date(a.appliedOn).getTime())
           setLeaves(data)

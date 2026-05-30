@@ -30,6 +30,8 @@ export function toEmployee(id: string, data: DocumentData): Employee {
     employmentType: data.employmentType ?? 'full_time',
     workLocation: data.workLocation ?? '',
     status: data.status ?? 'active',
+    dateOfBirth: data.dateOfBirth ?? '',
+    role: data.role,
     statusHistory: Array.isArray(data.statusHistory)
       ? data.statusHistory.map((entry: DocumentData) => ({
           status: entry.status ?? 'active',

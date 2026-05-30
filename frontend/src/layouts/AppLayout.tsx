@@ -1,13 +1,42 @@
+import { useEffect } from 'react'
 import { Link, Outlet, useNavigate } from 'react-router-dom'
 import { logoutUser } from '../services/authService'
 import { useAuth } from '../hooks/useAuth'
 import { Button } from '../components/ui/Button'
 import { hasRole } from '../utils/roles'
+import { NotificationBell } from '../components/notifications/NotificationBell'
 
 /** Main app shell after login (sidebar/header can grow here later) */
 export function AppLayout() {
   const { profile } = useAuth()
   const navigate = useNavigate()
+
+  useEffect(() => {
+    // Only run birthday & work anniversary reminder checks once per day per session
+    const today = new Date().toISOString().split('T')[0]
+    const lastChecked = localStorage.getItem('last_reminder_check')
+
+    if (lastChecked !== today) {
+      ;(async () => {
+        try {
+          const { checkBirthdays, checkWorkAnniversaries } = await import(
+            '../services/notifications/reminderService'
+          )
+          const birthdayRes = await checkBirthdays()
+          const anniversaryRes = await checkWorkAnniversaries()
+
+          if (birthdayRes.generated > 0 || anniversaryRes.generated > 0) {
+            console.log(
+              `[Reminders] Ran checks: Birthdays generated: ${birthdayRes.generated}, Anniversaries generated: ${anniversaryRes.generated}`
+            )
+          }
+          localStorage.setItem('last_reminder_check', today)
+        } catch (err) {
+          console.error('[Reminders] Failed to run reminder checks:', err)
+        }
+      })()
+    }
+  }, [])
 
   async function handleLogout() {
     await logoutUser()
@@ -69,9 +98,18 @@ export function AppLayout() {
                   Org settings
                 </Link>
               )}
+              {hasRole(profile?.role, ['super_admin', 'hr_admin']) && (
+                <Link
+                  to="/admin/announcements"
+                  className="text-gray-600 hover:text-gray-900"
+                >
+                  Announcements
+                </Link>
+              )}
             </nav>
           </div>
           <div className="flex items-center gap-4">
+            <NotificationBell />
             <span className="text-sm text-gray-600">
               {profile?.displayName} ({profile?.role})
             </span>

@@ -152,6 +152,20 @@ function generateJoiningDate() {
   return toDateString(d)
 }
 
+/**
+ * Generate a random date of birth between 22-60 years ago.
+ * Returns "YYYY-MM-DD".
+ */
+function generateDateOfBirth() {
+  const now = new Date()
+  const yearsAgo = randomInt(22, 60)
+  const d = new Date(now)
+  d.setFullYear(d.getFullYear() - yearsAgo)
+  d.setMonth(randomInt(0, 11))
+  d.setDate(randomInt(1, 28))
+  return toDateString(d)
+}
+
 /** Map department name → short code used in emails */
 const DEPT_SHORT = {
   Engineering: 'eng',
@@ -628,7 +642,22 @@ export async function runSeed(db, options = {}) {
       const def = employeeDefs[i]
       const deptShort = DEPT_SHORT[def.dept] || 'emp'
 
-      // Resolve manager's Firestore ID (null for CEO)
+      const now = new Date()
+      let joiningDate = generateJoiningDate()
+      let dateOfBirth = generateDateOfBirth()
+
+      if (i === 1) {
+        // HR Manager anniversary (completed exactly 2 years today)
+        const anniversaryDate = new Date(now)
+        anniversaryDate.setFullYear(now.getFullYear() - 2)
+        joiningDate = toDateString(anniversaryDate)
+
+        // HR Manager birthday (30 years old today)
+        const birthDate = new Date(now)
+        birthDate.setFullYear(now.getFullYear() - 30)
+        dateOfBirth = toDateString(birthDate)
+      }
+
       const managerId =
         def.managerIdx !== null ? insertedEmployeeIds[def.managerIdx] ?? '' : ''
 
@@ -641,7 +670,8 @@ export async function runSeed(db, options = {}) {
         designation: def.designation,
         managerId,
         role: def.role,
-        joiningDate: generateJoiningDate(),
+        joiningDate,
+        dateOfBirth,
         workLocation: pickRandom(WORK_LOCATIONS),
         employmentType: def.employmentType,
         profileImage: '', // placeholder – no real image

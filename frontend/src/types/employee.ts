@@ -1,3 +1,4 @@
+import type { UserRole } from './user'
 
 export type EmploymentType = 'full_time' | 'part_time' | 'contract' | 'intern'
 
@@ -39,6 +40,8 @@ export interface Employee {
   status: EmployeeStatus
   /** Optional audit trail when status changes (managed in employeeService). */
   statusHistory?: StatusHistoryEntry[]
+  dateOfBirth?: string
+  role?: UserRole
   createdAt: string
 }
 

@@ -8,6 +8,7 @@ import {
   type EmployeeStatus,
   type EmploymentType,
 } from '../../types/employee'
+import { USER_ROLES, type UserRole } from '../../types/user'
 
 /** Fields collected by this form (HR create/edit). */
 export interface EmployeeFormValues {
@@ -22,10 +23,13 @@ export interface EmployeeFormValues {
   employmentType: EmploymentType
   workLocation: string
   status: EmployeeStatus
+  dateOfBirth: string
+  role: UserRole
 }
 
 interface EmployeeFormProps {
   employee?: Employee | null
+  employeeOptions?: Employee[]
   departmentOptions?: string[]
   designationOptions?: string[]
   /** HR can change employment status; defaults to true on Employees page. */
@@ -47,6 +51,8 @@ const emptyValues: EmployeeFormValues = {
   employmentType: 'full_time',
   workLocation: '',
   status: 'active',
+  dateOfBirth: '',
+  role: 'employee',
 }
 
 function valuesFromEmployee(employee: Employee): EmployeeFormValues {
@@ -62,6 +68,8 @@ function valuesFromEmployee(employee: Employee): EmployeeFormValues {
     employmentType: employee.employmentType,
     workLocation: employee.workLocation,
     status: employee.status,
+    dateOfBirth: employee.dateOfBirth || '',
+    role: employee.role || 'employee',
   }
 }
 
@@ -88,6 +96,7 @@ function validate(
 
 export function EmployeeForm({
   employee,
+  employeeOptions = [],
   departmentOptions = [],
   designationOptions = [],
   showStatusField = true,
@@ -149,6 +158,15 @@ export function EmployeeForm({
           required
         />
         <Input
+          label="Date of Birth"
+          name="dateOfBirth"
+          type="date"
+          value={values.dateOfBirth}
+          onChange={(e) => updateField('dateOfBirth', e.target.value)}
+          error={errors.dateOfBirth}
+          placeholder="YYYY-MM-DD"
+        />
+        <Input
           label="Full name"
           name="name"
           value={values.name}
@@ -173,13 +191,26 @@ export function EmployeeForm({
           error={errors.phone}
           required
         />
-        <Input
-          label="Manager ID (optional)"
-          name="managerId"
-          value={values.managerId}
-          onChange={(e) => updateField('managerId', e.target.value)}
-          placeholder="Firestore doc id of manager"
-        />
+        <div className="space-y-1">
+          <label htmlFor="managerId" className="block text-sm font-medium text-gray-700">
+            Manager (optional)
+          </label>
+          <select
+            id="managerId"
+            value={values.managerId}
+            onChange={(e) => updateField('managerId', e.target.value)}
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+          >
+            <option value="">-- No Manager --</option>
+            {employeeOptions
+              .filter((e) => e.id !== employee?.id)
+              .map((e) => (
+                <option key={e.id} value={e.id}>
+                  {e.name} ({e.employeeId})
+                </option>
+              ))}
+          </select>
+        </div>
         <div>
           <Input
             label="Department"
@@ -242,6 +273,28 @@ export function EmployeeForm({
             {EMPLOYMENT_TYPES.map((type) => (
               <option key={type.value} value={type.value}>
                 {type.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="space-y-1">
+          <label
+            htmlFor="role"
+            className="block text-sm font-medium text-gray-700"
+          >
+            Role
+          </label>
+          <select
+            id="role"
+            value={values.role}
+            onChange={(e) =>
+              updateField('role', e.target.value as UserRole)
+            }
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+          >
+            {USER_ROLES.map((role) => (
+              <option key={role.value} value={role.value}>
+                {role.label}
               </option>
             ))}
           </select>

@@ -13,11 +13,14 @@ import { LeaveDashboardPage } from '../pages/leave/LeaveDashboardPage'
 import AttendancePage from '../pages/attendance/AttendancePage'
 import AdminAttendanceDashboard from '../pages/attendance/AdminAttendanceDashboard'
 import OrganizationChartPage from '../pages/orgChart/OrganizationChartPage'
+// @ts-ignore
 import { SeedDataPage } from '../pages/admin/SeedDataPage'
 import { PayrollPage } from '../pages/payroll/PayrollPage'
 import { SalaryStructuresPage } from '../pages/payroll/SalaryStructuresPage'
 import { SalarySlipPage } from '../pages/payroll/SalarySlipPage'
 import { MyPayrollPage } from '../pages/payroll/MyPayrollPage'
+import { NotificationHistoryPage } from '../pages/notifications/NotificationHistoryPage'
+import { AnnouncementAdminPage } from '../pages/notifications/AnnouncementAdminPage'
 
 export function AppRoutes() {
   return (
@@ -38,6 +41,7 @@ export function AppRoutes() {
             <Route path="/attendance" element={<AttendancePage />} />
             <Route path="/org-chart" element={<OrganizationChartPage />} />
             <Route path="/profile" element={<MyProfilePage />} />
+            <Route path="/notifications" element={<NotificationHistoryPage />} />
             {/* Payroll — all authenticated employees can see their own */}
             <Route path="/payroll/my" element={<MyPayrollPage />} />
             <Route path="/payroll/slip/:id" element={<SalarySlipPage />} />
@@ -52,6 +56,7 @@ export function AppRoutes() {
               {/* Payroll admin */}
               <Route path="/payroll" element={<PayrollPage />} />
               <Route path="/payroll/structures" element={<SalaryStructuresPage />} />
+              <Route path="/admin/announcements" element={<AnnouncementAdminPage />} />
             </Route>
 
             {/* Super-admin only: dev tools */}

@@ -29,6 +29,7 @@ import type {
   PayrollRecord,
   PayrollInput,
 } from '../types/payroll'
+import { monthLabel } from '../types/payroll'
 
 // ─── Collection names ────────────────────────────────────────────────────────
 const SS_COL = 'salaryStructures'
@@ -270,6 +271,42 @@ export async function generatePayroll(
     generatedAt: serverTimestamp(),
   })
 
+  // Trigger notification and mock email asynchronously
+  ;(async () => {
+    try {
+      const { createNotification } = await import('./notifications/notificationService')
+      const { sendEmail, emailTemplates } = await import('./notifications/emailService')
+      const { getEmployeeById } = await import('./employeeService')
+
+      const monthName = monthLabel(month)
+      
+      // 1. Create notification
+      await createNotification({
+        userId: employeeId,
+        title: 'Salary Slip Available',
+        message: `Your salary slip for ${monthName} ${year} is now available.`,
+        type: 'payroll',
+        createdBy: 'system',
+      })
+
+      // 2. Send mock email
+      const employee = await getEmployeeById(employeeId)
+      if (employee && employee.email) {
+        await sendEmail(
+          emailTemplates.payrollGenerated(
+            employee.email,
+            employee.name,
+            monthName,
+            year,
+            netSalary
+          )
+        )
+      }
+    } catch (err) {
+      console.error('Failed to send payroll notification:', err)
+    }
+  })()
+
   return {
     id: docRef.id,
     ...payrollInput,
@@ -328,6 +365,43 @@ export async function generatePayrollForAll(
         netSalary,
         generatedAt: serverTimestamp(),
       })
+
+      // Trigger notification and mock email asynchronously
+      ;(async () => {
+        try {
+          const { createNotification } = await import('./notifications/notificationService')
+          const { sendEmail, emailTemplates } = await import('./notifications/emailService')
+          const { getEmployeeById } = await import('./employeeService')
+
+          const monthName = monthLabel(month)
+
+          // 1. Create notification
+          await createNotification({
+            userId: structure.employeeId,
+            title: 'Salary Slip Available',
+            message: `Your salary slip for ${monthName} ${year} is now available.`,
+            type: 'payroll',
+            createdBy: 'system',
+          })
+
+          // 2. Send mock email
+          const employee = await getEmployeeById(structure.employeeId)
+          if (employee && employee.email) {
+            await sendEmail(
+              emailTemplates.payrollGenerated(
+                employee.email,
+                employee.name,
+                monthName,
+                year,
+                netSalary
+              )
+            )
+          }
+        } catch (err) {
+          console.error(`Failed to send payroll notification for ${structure.employeeName}:`, err)
+        }
+      })()
+
       generated++
     } catch (err) {
       errors.push(

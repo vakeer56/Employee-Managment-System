@@ -1,8 +1,7 @@
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import type { OrgNode } from '../../services/orgChartService'
 import { EmployeeNode } from './EmployeeNode'
 import { Tree, TreeNode } from 'react-organizational-chart'
-import type { Employee } from '../../types/employee'
 import { updateManager } from '../../services/orgChartService'
 
 interface OrgTreeProps {

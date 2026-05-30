@@ -26,6 +26,8 @@ function buildEmployeeInput(values: EmployeeFormValues): EmployeeInput {
     employmentType: values.employmentType,
     workLocation: values.workLocation.trim(),
     status: values.status,
+    dateOfBirth: values.dateOfBirth.trim(),
+    role: values.role,
   }
 }
 
@@ -153,6 +155,7 @@ export function EmployeesPage() {
         <EmployeeForm
           key={editingEmployee?.id ?? 'new'}
           employee={editingEmployee}
+          employeeOptions={employees}
           departmentOptions={orgDepartments}
           designationOptions={orgDesignations}
           loading={saving}

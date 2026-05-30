@@ -83,7 +83,7 @@ export function EmployeeNode({
 
   // ── Drag & Drop handlers (native HTML5 DnD — no extra lib needed) ──────────
   function handleDragStart(e: React.DragEvent) {
-    e.dataTransfer.setData('employeeId', employee.id)
+    e.dataTransfer.setData('text/plain', employee.id)
     e.dataTransfer.effectAllowed = 'move'
     onDragStart()
   }
@@ -96,7 +96,7 @@ export function EmployeeNode({
 
   function handleDrop(e: React.DragEvent) {
     e.preventDefault()
-    const draggedId = e.dataTransfer.getData('employeeId')
+    const draggedId = e.dataTransfer.getData('text/plain')
     if (draggedId && draggedId !== employee.id) {
       onDrop(employee.id) // this employee becomes the new manager
     }
@@ -111,6 +111,7 @@ export function EmployeeNode({
         onDragStart={handleDragStart}
         onDragEnd={onDragEnd}
         onDragOver={handleDragOver}
+        onDragEnter={handleDragOver}
         onDrop={handleDrop}
         className={`${cardBase} ${matchBorder} ${draggingStyle} p-3 gap-2`}
       >

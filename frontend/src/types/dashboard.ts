@@ -1,4 +1,3 @@
-import type { LeaveRecord } from './leave'
 import type { PayrollRecord } from './payroll'
 
 export interface AdminDashboardStats {
